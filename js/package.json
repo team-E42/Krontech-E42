@@ -1,0 +1,17 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "parcel index.html public/**/*",
+    "build": "parcel build index.html"
+  },
+  "keywords": [],
+  "author": "Victor Schiopu",
+  "license": "ISC",
+  "dependencies": {
+    "@parcel/config-default": "^2.16.4",
+    "parcel": "^2.16.4",
+    "three": "^0.184.0"
+  }
+}
