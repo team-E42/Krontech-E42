@@ -7,10 +7,7 @@ const leftDiv = document.getElementById('left');
 
 const scene = new three.Scene();
 
-const light = new three.SpotLight(undefined, Math.PI * 100);
-light.position.set(5, 10, 5);
-light.angle = Math.PI / 16;
-light.castShadow = true;
+const light = new three.HemisphereLight( 0xffffff, 0x080820, 1 );
 scene.add(light);
 
 const camera = new three.PerspectiveCamera(90, leftDiv.clientWidth / leftDiv.clientHeight, 0.1, 1000);
@@ -42,17 +39,21 @@ let bones = {};
 function setFingerCurl(hand, fingerName, amount) {
     const [base, mid, top] = hand[fingerName];
     
-    console.log(base, bones[base]);
-    console.log(mid, bones[mid]);
-    console.log(top, bones[top]);
+   // console.log(base, bones[base]);
+  //  console.log(mid, bones[mid]);
+   // console.log(top, bones[top]);
 
     if (!bones[base] || !bones[mid] || !bones[top]) {
         console.error("Bone missing!", base, mid, top);
         return;
     }
     
+    bones[base].rotation.set(0, 0, 0);
+    bones[mid].rotation.set(0, 0, 0);
+    bones[top].rotation.set(0, 0, 0);
+
     if(fingerName === "thumb") {
-        bones[base].rotation.z = -amount * 0.6;
+        bones[base].rotation.y = -amount * 0.3;
         bones[mid].rotation.z = -amount * 0.7;
         bones[top].rotation.z = -amount * 0.9;
     }else{
@@ -67,18 +68,26 @@ const loader = new GLTFLoader();
 loader.load('/public/hand_model.glb', (model) => {
     model.scene.traverse((obj) => {
         if (obj.isBone) {
+            console.log("Found bone:", obj.name);
             bones[obj.name] = obj;
         }
     });
     scene.add(model.scene);
-    model.scene.getObjectByName("Root_joint_01").rotateZ(Math.PI);
+    model.scene.getObjectByName("Root_joint_01").rotateZ(Math.PI/2);
+    model.scene.getObjectByName("Root_joint_023").rotateZ(Math.PI/2);
 });
 
 const indexSlider = document.getElementById("indexSlider");
+const indexSlider2 = document.getElementById("indexSlider2");
 
 indexSlider.addEventListener("input", (e) => {
   const value = parseFloat(e.target.value);
-  setFingerCurl(hand2, "pinky", -value);
+  setFingerCurl(hand2, "index", -value);
+});
+
+indexSlider2.addEventListener("input", (e) => {
+  const value = parseFloat(e.target.value);
+  setFingerCurl(hand1, "index", -value);
 });
 
 // init render and controls
@@ -148,8 +157,8 @@ speakBtn.addEventListener('click', () => {
         if (voice) utterance.voice = voice;
 
         utterance.lang = currentLanguage;
-        utterance.rate = 1;
-        utterance.pitch = 1;  
+        utterance.rate = .9;
+        utterance.pitch = 2;  
         utterance.volume = 1; 
 
         synth.speak(utterance);
