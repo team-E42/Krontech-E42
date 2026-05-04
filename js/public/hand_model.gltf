@@ -6434,17 +6434,6 @@
   "extensionsUsed": [
     "KHR_materials_specular"
   ],
-  "images": [
-    {
-      "uri": "textures/aiStandardSurface1_baseColor.png"
-    },
-    {
-      "uri": "textures/aiStandardSurface1_metallicRoughness.png"
-    },
-    {
-      "uri": "textures/aiStandardSurface1_emissive.png"
-    }
-  ],
   "materials": [
     {
       "alphaCutoff": 0.1259744598299478,

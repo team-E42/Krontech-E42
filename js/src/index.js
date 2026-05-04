@@ -5,17 +5,40 @@ import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 
 const scene = new three.Scene();
 
+const light = new three.PointLight(0xff0000, 1000, 100 );
+light.position.set(5, 0, 5);
+scene.add(light);
+
 const camera = new three.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 
 let mixer;
 const loader = new GLTFLoader();
-loader.load('/public/hand_model.gltf', (gltf) => {
+loader.load('/public/hand_model.glb', (gltf) => {
     const model = gltf.scene;
+    model.traverse((child) => {
+        if(child.isSkinnedMesh && child.skeleton){
+            const bones = child.skeleton.bones;
+            bones.forEach(element => {
+                console.log(element.name);
+            });
+        }
+    });
+    
+
+    const RootJointS = gltf.scene.getObjectByName('INDEX_BASE_joint_025');
+    const _RootJointS = gltf.scene.getObjectByName('INDEX_MID_joint_026');
+    if(RootJointS){
+       //RootJointS.position.x;
+        _RootJointS.rotateY(-Math.PI/4)
+        RootJointS.rotateY(-Math.PI/4);
+    }
+    
     console.log(model.skeleton);
     scene.add(model);
+    /*
     mixer = new three.AnimationMixer(model);
-    mixer.clipAction(gltf.animations[0]).play();
+    mixer.clipAction(gltf.animations[0]).play();*/
 });
 
 // init render and controls
