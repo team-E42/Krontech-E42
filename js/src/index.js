@@ -8,9 +8,14 @@ const scene = new three.Scene();
 const camera = new three.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 
+let mixer;
 const loader = new GLTFLoader();
-loader.load('/public/hand_model.glb', (model) => {
-    scene.add(model.scene);
+loader.load('/public/hand_model.gltf', (gltf) => {
+    const model = gltf.scene;
+    console.log(model.skeleton);
+    scene.add(model);
+    mixer = new three.AnimationMixer(model);
+    mixer.clipAction(gltf.animations[0]).play();
 });
 
 // init render and controls
