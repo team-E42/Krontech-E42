@@ -1,3 +1,9 @@
 /js/.parcel-cache
 /js/node_modules
 /js/dist
+
+/mlmodel/Include
+/mlmodel/Lib
+/mlmodel/Scripts
+/mlmodel/pyvenv.cfg
+/mlmodel/share

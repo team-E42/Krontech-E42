@@ -65,22 +65,10 @@ function setFingerCurl(hand, fingerName, amount) {
 
 
 
+let mixer;
 const loader = new GLTFLoader();
 loader.load('/public/hand_model.glb', (model) => {
-    model.scene.traverse((obj) => {
-        if (obj.isBone) {
-            bones[obj.name] = obj;
-        }
-    });
     scene.add(model.scene);
-    model.scene.getObjectByName("Root_joint_01").rotateZ(Math.PI);
-});
-
-const indexSlider = document.getElementById("indexSlider");
-
-indexSlider.addEventListener("input", (e) => {
-  const value = parseFloat(e.target.value);
-  setFingerCurl(hand2, "pinky", -value);
 });
 
 // init render and controls
