@@ -3,16 +3,33 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 
+ const setSkySphere_JPG = (scene, imagePath) => {
+  let textureLoader = new three.TextureLoader();
+  
+  textureLoader.load(imagePath, (jpgTexture) => {
+    let skySphereGeometry = new three.SphereGeometry(1000, 60, 60);
+  
+    let skySphereMaterial = new three.MeshBasicMaterial({
+      map: jpgTexture
+    });
+  
+    skySphereMaterial.side = three.BackSide;
+    let skySphereMesh = new three.Mesh(skySphereGeometry, skySphereMaterial);
+
+    scene.add(skySphereMesh);
+  });
+};
+
 const leftDiv = document.getElementById('left');
 
 const scene = new three.Scene();
 
-const light = new three.PointLight(0xff0000, 1000, 100 );
-light.position.set(5, 0, 5);
+const light = new three.HemisphereLight( 0xffffff, 0x080820, 4 );
 scene.add(light);
 
-const light = new three.HemisphereLight( 0xffffff, 0x080820, 1 );
-scene.add(light);
+const skyBoxPath = '/public/beautiful-cloudy-sky.jpg';
+
+setSkySphere_JPG(scene, skyBoxPath);
 
 const camera = new three.PerspectiveCamera(90, leftDiv.clientWidth / leftDiv.clientHeight, 0.1, 1000);
 camera.position.z = 5;
@@ -69,12 +86,29 @@ function setFingerCurl(hand, fingerName, amount) {
 }
 
 const loader = new GLTFLoader();
-loader.load('/public/hand_model.gltf', (gltf) => {
-    const model = gltf.scene;
-    console.log(model.skeleton);
-    scene.add(model);
-    mixer = new three.AnimationMixer(model);
-    mixer.clipAction(gltf.animations[0]).play();
+loader.load('/public/hand_model.glb', (model) => {
+    model.scene.traverse((obj) => {
+        if (obj.isBone) {
+            console.log("Found bone:", obj.name);
+            bones[obj.name] = obj;
+        }
+    });
+    scene.add(model.scene);
+   // model.scene.getObjectByName("Root_joint_01").rotateZ(Math.PI/2);
+ //   model.scene.getObjectByName("Root_joint_023").rotateZ(Math.PI/2);
+});
+
+const indexSlider = document.getElementById("indexSlider");
+const indexSlider2 = document.getElementById("indexSlider2");
+
+indexSlider.addEventListener("input", (e) => {
+  const value = parseFloat(e.target.value);
+  setFingerCurl(hand2, "index", -value);
+});
+
+indexSlider2.addEventListener("input", (e) => {
+  const value = parseFloat(e.target.value);
+  setFingerCurl(hand1, "index", -value);
 });
 
 // init render and controls
