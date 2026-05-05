@@ -2,15 +2,133 @@
 <html>
 <head>
   <style>
-    * {
+    body {
       margin: 0;
-      padding: 0;
+      overflow: hidden;
     }
+
+    #container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #left {
+      flex: 1;
+      background: black;
+    }
+
+    #right {
+      flex: 1;
+      background: linear-gradient(135deg, #58a0ff, #000000);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .tts-card {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 16px;
+      width: 80%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .tts-card h2 {
+      margin-bottom: 15px;
+    }
+
+    .tts-card textarea {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 15px;
+      resize: none;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .tts-card textarea:focus {
+      border-color: #4a90e2;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #speakBtn {
+      background: #4a90e2;
+      color: white;
+    }
+
+    #speakBtn:hover {
+      background: #357abd;
+    }
+
+    .secondary {
+      background: #e0e0e0;
+    }
+
+    .secondary:hover {
+      background: #c7c7c7;
+    }
+
+    #langToggle {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #ddd;
+      cursor: pointer;
+    }
+
+    #langToggle:hover {
+      background: #ccc;
+    }
+
   </style>
-  <script type="module" src="./src/index.js"></script>
+  
 </head>
 
 <body>
+  <div id="container">
+    <div id="left"></div>
+    <div id="right">
+       <div class="tts-card">
+      <h2>Text to Speech</h2>
+
+      <textarea id="textInput" placeholder="Aici vine textu din limbaju semnelor..."></textarea>
+
+      <div class="controls">
+        <button id="speakBtn">▶ Speak</button>
+        <button id="stopBtn" class="secondary">■ Stop</button>
+        <button id="langToggle">🌐 English</button>
+      </div>
+      <label>Index finger dreapta</label>
+      <input type="range" id="indexSlider" min="0" max="1" step="0.01" value="0">
+      <br></br>
+      <label>Index finger stanga</label>
+      <input type="range" id="indexSlider2" min="0" max="1" step="0.01" value="0">
+    </div>
+  </div>
+  <script type="module" src="./src/index.js"></script>
 </body>
 
 </html>

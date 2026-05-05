@@ -13,5 +13,8 @@
     "@parcel/config-default": "^2.16.4",
     "parcel": "^2.16.4",
     "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5"
   }
 }
