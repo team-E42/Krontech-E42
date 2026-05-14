@@ -1,6 +1,6 @@
 import socket
 
-host = "192.168.100.111"
+host = "10.179.221.238"
 port = 8080
 
 server_socket = socket.socket()

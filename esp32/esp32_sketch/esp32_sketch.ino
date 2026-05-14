@@ -1,18 +1,18 @@
 #include <WiFi.h>
 
-const int thumb_pin = 34;
-const int index_pin = 35;
+const int thumb_pin  = 34;
+const int index_pin  = 35;
 const int middle_pin = 32;
-const int ring_pin = 33;
-const int pinky_pin = 25;
+const int ring_pin   = 33;
+const int pinky_pin  = 25;
 
 int thumb_value, index_value, middle_value, ring_value, pinky_value;
 
-const char* ssid = "wifi";
+const char* ssid     = "wifi";
 const char* password = "12345678";
 
-const char* host = "10.179.221.238";
-const uint16_t port = 8080;
+const char*    host  = "10.179.221.238";
+const uint16_t port  = 8080;
 
 void initWiFi() {
   WiFi.mode(WIFI_STA);
@@ -36,11 +36,11 @@ void setup() {
 }
 
 void loop() {
-  thumb_value = analogRead(thumb_pin);
-  index_value = analogRead(index_pin);
+  thumb_value  = analogRead(thumb_pin);
+  index_value  = analogRead(index_pin);
   middle_value = analogRead(middle_pin);
-  ring_value = analogRead(ring_pin);
-  pinky_value = analogRead(pinky_pin);
+  ring_value   = analogRead(ring_pin);
+  pinky_value  = analogRead(pinky_pin);
   delay(100);
 
   client.println("$");
