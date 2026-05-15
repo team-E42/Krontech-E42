@@ -14,6 +14,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 // background image
+
 const setSkySphere_JPG = (scene, imagePath) => {  
   textureLoader.load(imagePath, (jpgTexture) => {
     let skySphereGeometry = new three.SphereGeometry(1000, 60, 60);
@@ -29,8 +30,9 @@ const setSkySphere_JPG = (scene, imagePath) => {
 };
 
 // building scene
-const skyBoxPath = '/public/beautiful-cloudy-sky.jpg';
+const skyBoxPath = '/public/mountain-silhouettes-landscape.jpg';
 setSkySphere_JPG(scene, skyBoxPath);
+
 scene.add(light);
 
 renderer.setSize(renderDiv.clientWidth, renderDiv.clientHeight);

@@ -93,7 +93,6 @@ class AttentionDecoder(nn.Module):
 
 
 # parameters
-
 INPUT_VOCABULARY_SIZE = 2
 HIDDEN_SIZE = 128
 EMBED_DIM = 2

@@ -8,9 +8,12 @@ loader.load('/public/hand_model.glb', (model) => {
     model.scene.traverse((obj) => {
         if (obj.isBone) {
             bones[obj.name] = obj;
+            console.log("Bone found:", obj.name);
         }
     });
     scene.add(model.scene);
+    scene.getObjectByName("Root_joint_01").rotateZ(Math.PI/2);
+    scene.getObjectByName("Root_joint_023").rotateZ(Math.PI/2);
 });
 
 // prepare finger movement
