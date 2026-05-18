@@ -6,6 +6,10 @@ const loader = new GLTFLoader();
 let bones = {};
 loader.load('/public/hand_model.glb', (model) => {
     model.scene.traverse((obj) => {
+        if(obj.isMesh) {
+            obj.material.color.set(0x0186ea8);
+
+        }
         if (obj.isBone) {
             bones[obj.name] = obj;
             console.log("Bone found:", obj.name);
@@ -13,6 +17,7 @@ loader.load('/public/hand_model.glb', (model) => {
     });
     scene.add(model.scene);
     scene.getObjectByName("Root_joint_01").rotateZ(Math.PI/2);
+    scene.getObjectByName("Root_joint_01").position.set(0, 40000, 0);
     scene.getObjectByName("Root_joint_023").rotateZ(Math.PI/2);
 });
 

@@ -8,13 +8,12 @@ const renderDiv = document.getElementById('render');
 const textureLoader = new three.TextureLoader();
 const camera = new three.PerspectiveCamera(90, renderDiv.clientWidth / renderDiv.clientHeight, 0.1, 1000);
 camera.position.z = 5;
-const light = new three.HemisphereLight( 0xffffff, 0x080820, 4 );
+const light = new three.HemisphereLight( 0xffffff, 0x080820, 7 );
 const renderer = new three.WebGLRenderer({ antialias: true });
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 // background image
-
 const setSkySphere_JPG = (scene, imagePath) => {  
   textureLoader.load(imagePath, (jpgTexture) => {
     let skySphereGeometry = new three.SphereGeometry(1000, 60, 60);
@@ -30,7 +29,7 @@ const setSkySphere_JPG = (scene, imagePath) => {
 };
 
 // building scene
-const skyBoxPath = '/public/mountain-silhouettes-landscape.jpg';
+const skyBoxPath = '/public/9078.jpg';
 setSkySphere_JPG(scene, skyBoxPath);
 
 scene.add(light);
