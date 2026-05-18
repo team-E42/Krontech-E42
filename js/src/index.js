@@ -9,8 +9,9 @@ socket.onopen = () => {
 };
 
 socket.onmessage = (event) => {
-  const values = event.data;
-  const arr = values.split(" ");
+  const data = JSON.parse(event.data);;
+
+  const arr = data.values;
 
   const indexCurl = parseFloat(arr[0]);
   const middleCurl = parseFloat(arr[1]);
@@ -24,6 +25,8 @@ socket.onmessage = (event) => {
   setFingerCurl(hands.hand2, "ring", -ringCurl);
   setFingerCurl(hands.hand2, "pinky", -pinkyCurl);
   setFingerCurl(hands.hand2, "thumb", -thumbCurl);
+
+  document.getElementById("textInput").innerText = `${data.label}`;
 };
 
 socket.onclose = () => {

@@ -2,6 +2,8 @@ import socket
 import websockets
 import asyncio
 import random
+import mlmodel.main as ml
+import json
 
 clients = set()
 
@@ -50,7 +52,15 @@ async def tcp_loop():
         if len(lf) != 5:
             continue
         
-        await send_to_browsers(f"{' '.join(lf)}")
+        message = f"{' '.join(lf)}"
+        prediction = ml.predict(message)
+        
+        payload = {
+            "values": message,
+            "label": prediction
+        }
+
+        await send_to_browsers(json.dumps(payload))
 
 async def main():
     await websockets.serve(wshandler, "localhost", 4040)
