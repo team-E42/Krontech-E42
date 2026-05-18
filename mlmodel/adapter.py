@@ -2,7 +2,7 @@ import socket
 import websockets
 import asyncio
 import random
-import mlmodel.main as ml
+import main as ml
 import json
 
 clients = set()
@@ -23,7 +23,7 @@ async def send_to_browsers(message):
         await asyncio.gather(*(client.send(message) for client in clients))
 
 async def tcp_loop():
-    host = "127.0.0.1" #"10.179.221.238"
+    host = "192.168.100.111"
     port = 8080
 
     server_socket = socket.socket()
@@ -49,11 +49,16 @@ async def tcp_loop():
             elif item == "$": 
                 continue
             else: lf.append(item)
-        if len(lf) != 5:
-            continue
-        
+
+        lfint = []
+        for x in lf: 
+            if x != "": lfint.append(int(x))
+       
         message = f"{' '.join(lf)}"
-        prediction = ml.predict(message)
+        if len(lfint) != 5:
+            continue
+
+        prediction = ml.predict(lfint)
         
         payload = {
             "values": message,

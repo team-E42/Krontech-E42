@@ -8,10 +8,10 @@ const int pinky_pin  = 25;
 
 int thumb_value, index_value, middle_value, ring_value, pinky_value;
 
-const char* ssid     = "wifi";
-const char* password = "12345678";
+const char* ssid     = "Orange-DkP4-2.4G";
+const char* password = "8v8kgUHa";
 
-const char*    host  = "10.179.221.238";
+const char*    host  = "192.168.100.111";
 const uint16_t port  = 8080;
 
 void initWiFi() {

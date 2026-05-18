@@ -38,5 +38,3 @@ def predict(sequence, max_length=max_length):
             chars.append(output_vocab.index2char[idx])
 
         return "".join(chars)
-
-print(predict([4095, 0, 471, 2950, 0]))
