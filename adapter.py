@@ -10,8 +10,6 @@ server_socket.listen(1)
 conn, address = server_socket.accept() 
 print(f"Connection from: {address}")
 
-file = open("./mlmodel/data/train.txt", "a")
-
 df = []
 
 while True:
@@ -30,10 +28,4 @@ while True:
         else: lf.append(item)
     if len(lf) != 5:
         continue
-
-    print(" ".join(lf))
-    letter = input(">")
-    if letter == "":
-        continue
-    print(f"{' '.join(lf)} {letter}", file=file)    
         

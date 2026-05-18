@@ -1,114 +1,163 @@
 from trainenv import *
 
-import random
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-
-examples = []
-random.shuffle(examples)
-
-class TranslationDataset(Dataset):
-    def __innit__(self, examples):
-        self.examples = examples
-    def __len__(self):
-        return len(self.examples)
-    def __getitem__(self, idx):
-        input_sequence, target_sequence = self.examples[idx]
-        input_tokens = [
-            vocabulary.word2index.get(word, vocabulary.word2index["<UNK>"])
-            for word in input_sequence.split()
-        ]
-        target_tokens = [
-            vocabulary.word2index.get(word, vocabulary.word2index["<UNK>"])
-            for word in target_sequence.split()
-        ]
-        target_tokens.append(EOS_TOKEN)
-        return(torch.tensor(input_tokens, dtype=torch.long),
-               torch.tensor(target_tokens, dtype=torch.long))
-
-dataset = TranslationDataset(examples)
+# parameters
+tuple_size = 5
+value_vocab_size = 4096
+embed_size = 256
+hidden_size = 256
+batch_size = 32
+max_length = 3
 
 def collate_fn(batch):
     inputs, targets = zip(*batch)
-    
-    input_lenghts = [len(seq) for seq in inputs]
-    target_lenghts = [len(seq) for seq in targets]
 
-    padded_inputs = nn.utils.rnn.pad_sequence(inputs, batch_first=True)
-    padded_targets = nn.utils.rnn.pad_sequence(targets, batch_first=True)
+    input_lengths = [x.size(0) for x in inputs]
+    target_lengths = [y.size(0) for y in targets]
 
-    return padded_inputs, padded_targets, input_lenghts, target_lenghts
+    max_input_len = max(input_lengths)
+    max_target_len = max(target_lengths)
 
-loader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    padded_inputs = []
+    padded_targets = []
+
+    for x in inputs:
+        pad_len = max_input_len - x.size(0)
+
+        if pad_len > 0:
+            pad = torch.zeros(pad_len, tuple_size, dtype=torch.long)
+            x = torch.cat([x, pad], dim=0)
+
+        padded_inputs.append(x)
+
+    for y in targets:
+        pad_len = max_target_len - y.size(0)
+        if pad_len > 0:
+            pad = torch.full((pad_len,), PAD_TOKEN, dtype=torch.long)
+            y = torch.cat([y, pad])
+
+        padded_targets.append(y)
+
+    return torch.stack(padded_inputs).to(device), torch.stack(padded_targets).to(device)
+
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+
+class TupleEmbedding(nn.Module):
+    def __init__(self, value_vocab_size, embedding_dim, tuple_size=5):
+        super().__init__()
+        self.embeddings = nn.ModuleList([
+            nn.Embedding(
+                value_vocab_size,
+                embedding_dim
+            )
+            for _ in range(tuple_size)
+        ])
+
+        self.projection = nn.Linear(embedding_dim * tuple_size, embedding_dim)
+
+    def forward(self, x):
+        parts = []
+        for i in range(tuple_size):
+            emb = self.embeddings[i](x[:, :, i])
+            parts.append(emb)
+
+        x = torch.cat(parts, dim=-1)
+        x = self.projection(x)
+        return x
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_vocabulary_length, hidden_size):
+    def __init__(self, value_vocab_size, embedding_dim, hidden_size):
         super().__init__()
-        self.embedding = nn.Embedding(input_vocabulary_length, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size, batch_first=True)
+        self.hidden_size = hidden_size
+        self.embedding = TupleEmbedding(value_vocab_size, embedding_dim)
+        self.gru = nn.GRU(embedding_dim, hidden_size, batch_first=True)
 
     def forward(self, x):
         embedded = self.embedding(x)
         outputs, hidden = self.gru(embedded)
         return outputs, hidden
 
-class Attention(nn.Module):
-    def __init__(self, hidden_size):
-        super().__init__()
-        self.attn = nn.Linear(hidden_size * 2, hidden_size)
-        self.v = nn.Linear(hidden_size, 1)
-
-    def forward(self, hidden, encoder_outputs):
-        batch_size = encoder_outputs.size(0)
-        seq_len = encoder_outputs.size(1)
-
-        hidden = hidden[-1]
-        hidden = hidden.unsqueeze(1).repeat(1, seq_len, 1)
-        energy = torch.tanh(self.attn(
-            torch.cat((hidden, encoder_outputs), dim=2)
-        ))
-
-        attention = self.v(energy).squeeze(2)
-        return torch.softmax(attention, dim=1)
-
 class AttentionDecoder(nn.Module):
-    def __init__(self, hidden_size, output_vocabulary_size, embedding_matrix, embed_dim):
+    def __init__(self, hidden_size, output_size):
         super().__init__()
-        self.embedding = nn.Embedding.from_pretrained(embedding_matrix, freeze=False)
-        self.attention = Attention(hidden_size)
-        self.gru = nn.GRU(embed_dim + hidden_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_vocabulary_size)
+        self.embedding = nn.Embedding(output_size, hidden_size)
+        self.attn = nn.MultiheadAttention(hidden_size, num_heads=1, batch_first=True)
+        self.gru = nn.GRU(hidden_size * 2, hidden_size, batch_first=True)
+        self.out = nn.Linear(hidden_size, output_size)
 
-    def forward(self, input_token, hidden, encoder_outputs):
-        embed = self.embedding(input_token)
-        attention_weights = self.attention(hidden, encoder_outputs)
-        context = torch.bmm(attention_weights.unsqueeze(1), encoder_outputs)
-        gru_input = torch.cat((embed, context), dim=2)
-        output, hidden = self.gru(gru_input, hidden)
-        prediction = self.fc(output)
-        return prediction, hidden
+    def forward(self, encoder_outputs, encoder_hidden, target_tensor=None, max_lenghts=32):
+        batch_size = encoder_outputs.size(0)
 
+        decoder_input = torch.full((batch_size, 1), SOS_TOKEN, device=device, dtype=torch.long)
+        decoder_hidden = encoder_hidden
+        outputs = []
+        for i in range(max_lenghts):
+            embedded = self.embedding(decoder_input)
+            query = decoder_hidden.permute(1,0,2)
+            context, _ = self.attn(
+                query,
+                encoder_outputs,
+                encoder_outputs
+            )
 
-# parameters
-INPUT_VOCABULARY_SIZE = 2
-HIDDEN_SIZE = 128
-EMBED_DIM = 2
-vocabulary = Vocabulary()
+            gru_input = torch.cat([embedded, context], dim=2)
+            output, decoder_hidden = self.gru(gru_input, decoder_hidden)
+            logits = self.out(output)
+            outputs.append(logits)
+            if target_tensor is not None:
+                decoder_input = target_tensor[:, i].unsqueeze(1)
+            else:
+                decoder_input = logits.argmax(-1)
 
-embedding_matrix = np.random.normal(
-    scale=0.6,
-    size=(vocabulary.n_words, EMBED_DIM)
-)
+        outputs = torch.cat(outputs, dim=1)
+        return outputs
 
-for word, idx in vocabulary.word2index.items():
-    if word in vocabulary.word2vec:
-        embedding_matrix[idx] = vocabulary.word2vec[word][:EMBED_DIM]
+if __name__ == "__main__":
+    encoder = Encoder(value_vocab_size, embed_size, hidden_size).to(device)
+    decoder = AttentionDecoder(hidden_size, chvb.char_count).to(device)
 
-embedding_matrix = torch.FloatTensor(embedding_matrix)
+    encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=0.001)
+    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=0.001)
 
-encoder = Encoder(INPUT_VOCABULARY_SIZE, HIDDEN_SIZE).to(device)
-decoder = AttentionDecoder(HIDDEN_SIZE, vocabulary.word_count, embedding_matrix)
+    criterion = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
+    epochs = 50
+    for epoch in range(epochs):
+        total_loss = 0
+        for input_tensor, target_tensor in loader:
+            encoder_optimizer.zero_grad()
+            decoder_optimizer.zero_grad()
+
+            encoder_outputs, encoder_hidden = encoder(input_tensor)
+            decoder_outputs = decoder(encoder_outputs, encoder_hidden, target_tensor, max_lenghts=max_length)
+
+            loss = criterion(
+                decoder_outputs.view(-1, chvb.char_count),
+                target_tensor.view(-1)
+            )
+
+            loss.backward()
+            encoder_optimizer.step()
+            decoder_optimizer.step()
+
+            total_loss += loss.item()
+
+        print(
+            f"Epoch {epoch+1} Loss: "
+            f"{total_loss / len(loader):.4f}"
+        )
+
+        checkpoint = {
+            "encoder_state_dict": encoder.state_dict(),
+            "decoder_state_dict": decoder.state_dict(),
+            "encoder_optimizer_state_dict": encoder_optimizer.state_dict(),
+            "decoder_optimizer_state_dict": decoder_optimizer.state_dict(),
+            "output_vocab": chvb.__dict__,
+            "hidden_size": hidden_size
+        }
+
+        torch.save(checkpoint, s2e_model_path)
 
