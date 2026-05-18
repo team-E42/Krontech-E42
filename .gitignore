@@ -7,3 +7,4 @@
 /mlmodel/Scripts
 /mlmodel/pyvenv.cfg
 /mlmodel/share
+/mlmodel/__pycache__/

@@ -31,8 +31,6 @@ async def tcp_loop():
     conn, address = server_socket.accept() 
     print(f"Connection from: {address}")
 
-    file = open("./mlmodel/data/train.txt", "a")
-
     df = []
 
     while True:
@@ -51,16 +49,8 @@ async def tcp_loop():
             else: lf.append(item)
         if len(lf) != 5:
             continue
-
-        print(" ".join(lf))
         
-        letter = input(">")
-        
-        if letter == "":
-            continue
-        
-        print(f"{' '.join(lf)} {letter}", file=file)  
-        await send_to_browsers(f"{' '.join(lf)} {letter}")
+        await send_to_browsers(f"{' '.join(lf)}")
 
 async def main():
     await websockets.serve(wshandler, "localhost", 4040)
